@@ -7,8 +7,8 @@ import (
 )
 
 type SystemResources struct {
-	Uptime  types.MikrotikDuration `mikrotik:"uptime"`
-	Version string                 `mikrotik:"version"`
+	Uptime  types.MikrotikDuration `mikrotik:"uptime,readonly"`
+	Version string                 `mikrotik:"version,readonly"`
 }
 
 func (d *SystemResources) ActionToCommand(action Action) string {
@@ -27,6 +27,9 @@ func (client Mikrotik) GetSystemResources() (*SystemResources, error) {
 
 	log.Printf("[INFO] Running the mikrotik command: `%s`", cmd)
 	r, err := c.RunArgs(cmd)
+	if err != nil {
+		return nil, err
+	}
 
 	err = Unmarshal(*r, sysResources)
 	return sysResources, err

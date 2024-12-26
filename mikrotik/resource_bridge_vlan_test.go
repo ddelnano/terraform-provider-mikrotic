@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/ddelnano/terraform-provider-mikrotik/client"
-	"github.com/ddelnano/terraform-provider-mikrotik/mikrotik/internal"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -21,11 +20,41 @@ func TestBridgeVlan_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBridgeVlanDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBridgeVlanConfig("test_bridge", []int{10, 15, 18}),
+				Config: `
+						resource "mikrotik_bridge" "default" {
+							name = "test_bridge"
+						}
+
+						resource "mikrotik_bridge_vlan" "testacc" {
+							bridge   = mikrotik_bridge.default.name
+							vlan_ids = [10, 15, 18]
+							untagged = ["*0"]
+						}
+				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccBridgeVlanExists(resourceName, &createdBridgeVlan),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "bridge", "test_bridge"),
+					resource.TestCheckResourceAttr(resourceName, "untagged.#", "1"),
+				),
+			},
+			{
+				Config: `
+				resource "mikrotik_bridge" "default" {
+					name = "test_bridge"
+					}
+
+					resource "mikrotik_bridge_vlan" "testacc" {
+						bridge   = mikrotik_bridge.default.name
+						vlan_ids = [10, 15, 18]
+						untagged = []
+						}
+						`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccBridgeVlanExists(resourceName, &createdBridgeVlan),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "bridge", "test_bridge"),
+					resource.TestCheckResourceAttr(resourceName, "untagged.#", "0"),
 				),
 			},
 		},
@@ -70,17 +99,4 @@ func testAccCheckBridgeVlanDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccBridgeVlanConfig(bridgeName string, vlanIDs []int) string {
-	return fmt.Sprintf(`
-			resource "mikrotik_bridge" "default" {
-				name = %q
-			}
-
-			resource "mikrotik_bridge_vlan" "testacc" {
-				bridge   = mikrotik_bridge.default.name
-				vlan_ids = [%s]
-			}
-		`, bridgeName, internal.JoinIntsToString(vlanIDs, ", "))
 }
