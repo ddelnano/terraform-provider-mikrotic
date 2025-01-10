@@ -79,22 +79,30 @@ func Marshal(c string, s interface{}) []string {
 		// so leave only modifiers in this slice
 		mikrotikTags = mikrotikTags[1:]
 
-		if mikrotikPropName != "" && (!value.IsZero() || value.Kind() == reflect.Bool) {
-			// add conditional to check if a Mikrotik property is READ ONLY, such as the following wireguard props
-			// https://help.mikrotik.com/docs/display/ROS/WireGuard#WireGuard-Read-onlyproperties
-			if contains(mikrotikTags, "readonly") {
+		if mikrotikPropName == "" {
+			// skip if property name is not set in struct tag
+			continue
+		}
 
-				// if a struct field contains the tag value of 'readonly', do not marshal it
-				continue
-			}
+		// skip attributes marked as `readonly` (computed by RouterOS), such as the following wireguard props
+		// https://help.mikrotik.com/docs/display/ROS/WireGuard#WireGuard-Read-onlyproperties
+		if contains(mikrotikTags, "readonly") {
+			// if a struct field contains the tag value of 'readonly', do not marshal it
+			continue
+		}
 
-			if mar, ok := value.Interface().(Marshaler); ok {
-				// if type supports custom marshaling, use that result immediately
-				stringValue := mar.MarshalMikrotik()
-				cmd = append(cmd, fmt.Sprintf("=%s=%s", mikrotikPropName, stringValue))
-				continue
-			}
+		// types, which implement `Marshaler` interface, have higher priority as they likely to have specific logic
+		// even for zero or nil values
+		if mar, ok := value.Interface().(Marshaler); ok {
+			// if type supports custom marshaling, use that result immediately
+			stringValue := mar.MarshalMikrotik()
+			cmd = append(cmd, fmt.Sprintf("=%s=%s", mikrotikPropName, stringValue))
+			continue
+		}
 
+		// try to marshal non-zero values only
+		// here `bool` is exception as we want to toggle boolean switches
+		if !value.IsZero() || value.Kind() == reflect.Bool {
 			switch value.Kind() {
 			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 				cmd = append(cmd, fmt.Sprintf("=%s=%d", mikrotikPropName, elem.Field(i).Interface()))

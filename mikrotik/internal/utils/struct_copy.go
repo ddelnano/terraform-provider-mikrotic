@@ -122,7 +122,7 @@ func coreTypeToTerraformType(src, dest reflect.Value) error {
 		tfValue = tftypes.Float64Value(src.Float())
 	case reflect.Slice:
 		var diags diag.Diagnostics
-		var elements []interface{}
+		elements := []interface{}{}
 		for i := 0; i < src.Len(); i++ {
 			elements = append(elements, src.Index(i).Interface())
 		}

@@ -19,8 +19,9 @@ func TestWirelessSecurityProfile_basic(t *testing.T) {
 
 	randSuffix := RandomString()
 	expected := &WirelessSecurityProfile{
-		Name: "test-profile-" + randSuffix,
-		Mode: WirelessModeNone,
+		Name:                "test-profile-" + randSuffix,
+		Mode:                WirelessModeNone,
+		AuthenticationTypes: []string{},
 	}
 
 	created, err := c.AddWirelessSecurityProfile(expected)

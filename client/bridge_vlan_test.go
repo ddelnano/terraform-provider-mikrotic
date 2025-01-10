@@ -55,9 +55,11 @@ func TestBridgeVlanBasic(t *testing.T) {
 	}
 
 	expectedBridgeVlan := &BridgeVlan{
-		Id:      createdBridgeVlan.Id,
-		Bridge:  bridge1Name,
-		VlanIds: []int{10, 20},
+		Id:       createdBridgeVlan.Id,
+		Bridge:   bridge1Name,
+		VlanIds:  []int{10, 20},
+		Tagged:   []string{},
+		Untagged: []string{},
 	}
 	assert.Equal(t, expectedBridgeVlan, createdBridgeVlan)
 
@@ -66,9 +68,11 @@ func TestBridgeVlanBasic(t *testing.T) {
 	require.NoError(t, err)
 
 	expectedBridgeVlan = &BridgeVlan{
-		Id:      createdBridgeVlan.Id,
-		Bridge:  bridge2Name,
-		VlanIds: []int{10, 20},
+		Id:       createdBridgeVlan.Id,
+		Bridge:   bridge2Name,
+		VlanIds:  []int{10, 20},
+		Tagged:   []string{},
+		Untagged: []string{},
 	}
 	assert.Equal(t, expectedBridgeVlan, updatedBridgeVlan)
 }
